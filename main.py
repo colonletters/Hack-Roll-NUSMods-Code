@@ -22,6 +22,7 @@ bot.set_my_commands([
 ])
 
 CURRENT_SEMESTER = "2"
+ACADEMIC_YEAR = "AY 2021/2022"
 
 def request_start(chat_id):
   """
@@ -48,8 +49,6 @@ def start(message):
   else:
       chat_user = message.chat.title
 
-  message_text = f'Hello {chat_user}, welcome to NUS Mods Planner. This bot aims to help you to make your timetable in NUS as painful OR painless as possible 😄'
-
   # Initialise session
   cart[chat_id] = {}
 
@@ -57,7 +56,8 @@ def start(message):
   cart[chat_id]["mymods"] = []
 
   # send message to the user
-  bot.send_message(chat_id=chat_id, text=message_text)
+  bot.send_message(chat_id=chat_id, text=f'Hello {chat_user}, welcome to NUS Mods Planner. This bot aims to help you to make your timetable in NUS as painful OR painless as possible 😄')
+  bot.send_message(chat_id=chat_id, text=f'To view the functions in this bot, type / and select the command of interest, e.g. /addmodules')
 
 
 # add module to a list
@@ -82,7 +82,8 @@ def modadd(message):
 
     # error message if not separated by comma
     if pattern.match(msg) == None:
-      print("Please key in the modules in the right format")
+      bot.send_message(chat_id, text=f'The module could not be added because it is not entered in the right format. Add modules using the format /addmodule <module code>. e.g. /addmodule LSM2191 OR multiple modules using e.g. /addmodule LSM2191, LSM2232. To check the list of modules added, use the command /mymodules')
+      return
     
     # split by ',' and remove whitespace, modules will be in a list (if have >1 modules)
     elif ',' in msg:
@@ -106,7 +107,7 @@ def modadd(message):
 
       # error if module not offered in current semester
       if CURRENT_SEMESTER not in semesters_offered:
-        bot.send_message(chat_id, text=f'{modname} could not be added because it is not offered in the current semester.')
+        bot.send_message(chat_id, text=f'{modname} could not be added because it is not offered in {ACADEMIC_YEAR} semester {CURRENT_SEMESTER}.')
         continue
 
       # error if module alr in the list
@@ -121,7 +122,7 @@ def modadd(message):
         text=
         'Maximum number of modules (10) added!'
         )
-        continue
+        return
 
       # check if module is in the NUSmods list
       elif modname in lst:
@@ -138,7 +139,7 @@ def modadd(message):
       else:
         bot.send_message(chat_id, text=f'{modname} is not a valid module code!')
 
-    bot.send_message(chat_id, text=f'Continue to add modules using the format /addmodule <module code>. e.g. /addmodule LSM2191 OR multiple modules using /addmodule LSM2191, LSM2232. To check the list of modules added, use the command /mymodules')
+    bot.send_message(chat_id, text=f'Continue to add modules using the format /addmodule <module code>. e.g. /addmodule LSM2191 OR multiple modules using e.g. /addmodule LSM2191, LSM2232. To check the list of modules added, use the command /mymodules')
     
     print(f"This is for lstmods {lstmods}")
 
@@ -147,7 +148,7 @@ def modadd(message):
       bot.send_message(
           chat_id,
           text=
-          'Please enter a module code in this format: /addmodule <module code>. e.g. /addmodule LSM2191'
+          'Please enter a module code in this format: /addmodule <module code>. e.g. /addmodule LSM2191 OR multiple modules using /addmodule LSM2191, LSM2232 and ensure that it is a valid module offered this semester'
       )
 
 
@@ -339,7 +340,14 @@ def checkslots(chat_id):
         if j["classNo"] == f"{i}" and j["lessonType"] == "Lecture":
           total_size += j["size"]
           break
-          
+ 
+    
+    if total_size == 0:
+      for i in range (1, 7):
+        for j in timetable:
+          if j["classNo"] == f"{i}" and j["lessonType"] == "Tutorial":
+            total_size += j["size"]
+            break         
     bot.send_message(
     chat_id,
     text=
