@@ -17,8 +17,7 @@ bot.set_my_commands([
     BotCommand('deletemodule', 'Deletes a module from the timetable plan'),
     BotCommand('clearmodules', 'Clears all module from module cart'),
     BotCommand('mymodules', 'Lists all modules added to the timetable plan'),
-    BotCommand('checkslots', 'Checks the vacancy of the mods in the cart'),
-    BotCommand('surpriseme', 'Surprises!')
+    BotCommand('functions', 'View all executable functions for modules in cart')
 ])
 
 # NUS mods database
@@ -199,6 +198,7 @@ def mymodules(message):
       text=
       'No modules in the list!'
     )
+    return
     
   else:
     bot.send_message(chat_id, text='Here are the modules in the list now:')
@@ -213,17 +213,65 @@ def mymodules(message):
       )
 
 
-# checks the total slots of the mods in the cart
-@bot.message_handler(commands=['checkslots'])
-def checkslots (message):
+# Provide buttons for functions available
+@bot.message_handler(commands=['functions'])
+def functions(message):
   """
-  Checks total slots of the mods in the cart
+  Display available functions in buttons
   """
 
   chat_id = message.chat.id
   if chat_id not in cart:
-      request_start(chat_id)
-      return
+    request_start(chat_id)
+    return
+
+  chat_text = 'Select the function you would like to execute for modules in the cart'
+
+  buttons = []
+  all_functions = [
+    'Check slots',
+    'Surprise me'
+  ]
+
+  for function_name in all_functions:
+    row = []
+    button = InlineKeyboardButton(
+      function_name,
+      callback_data=function_name
+    )
+    row.append(button)
+    buttons.append(row)
+
+  bot.send_message(
+    chat_id=chat_id,
+    text=chat_text,
+    reply_markup=InlineKeyboardMarkup(buttons)
+  )
+
+
+# Handle receiving callback queries
+@bot.callback_query_handler(func=lambda call: True)
+def handle_callback(call):
+  """
+  Handles the execution of functions when receiving a callback query
+  """
+
+  chat_id = call.message.chat.id
+  data = call.data
+
+  if data == 'Check slots':
+    checkslots(chat_id)
+    return
+  if data == 'Surprise me':
+    surpriseme(chat_id)
+    return
+
+
+# Helper function that checks the total slots of the mods in the cart
+def checkslots(chat_id):
+  """
+  Checks total slots of the mods in the cart
+  """
   
   mymods = cart[chat_id]["mymods"]
   
@@ -234,6 +282,7 @@ def checkslots (message):
       text=
       'No modules in the list! Please add modules using the command /addmodule to view the vacancies'
     )
+    return
 
   # Get total possible slots for modules in the cart
   for mod in mymods:
@@ -257,9 +306,8 @@ def checkslots (message):
     )
 
 
-# Surprises the user
-@bot.message_handler(commands=['surpriseme'])
-def surpriseme (message):
+# Helper function that surprises the user
+def surpriseme(chat_id):
   """
   Surprise surprise
   """
@@ -269,10 +317,7 @@ def surpriseme (message):
     "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     "https://www.youtube.com/watch?v=oPRv6WrPThI"
   ]
-  chat_id = message.chat.id
-  if chat_id not in cart:
-      request_start(chat_id)
-      return
+
   
   # Generate random URL
   random_url = surprises[random.randrange(len(surprises))]
