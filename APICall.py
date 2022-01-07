@@ -9,4 +9,7 @@ lst = [i.get('moduleCode') for i in db.json()]
 
 def GetModuleInfo(ModCode):
   #ModCode is a string
-  return requests.get(f"https://api.nusmods.com/v2/2021-2022/modules/{ModCode}").json()
+  if ModCode not in lst:
+    print("No Info Found!")
+    return False
+  return requests.get(f"https://api.nusmods.com/v2/2021-2022/modules/{ModCode}.json").json()

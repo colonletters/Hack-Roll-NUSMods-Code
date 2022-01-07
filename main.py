@@ -1,12 +1,12 @@
 import os
 
-import telebot, requests, json, random
+import telebot, requests, json, random, re
 from telebot.types import (BotCommand, InlineKeyboardButton,
                            InlineKeyboardMarkup, LabeledPrice)
 
 # import cart, NUSMods
 from database import cart
-from APICall import db, lst
+from APICall import db, lst, GetModuleInfo
 
 # HackNRoll NUS Mods bot
 API_KEY = os.getenv('API_KEY')
@@ -21,6 +21,7 @@ bot.set_my_commands([
     BotCommand('functions', 'View all executable functions for modules in cart')
 ])
 
+CURRENT_SEMESTER = "2"
 
 def request_start(chat_id):
   """
@@ -72,13 +73,46 @@ def modadd(message):
       return
 
   try:
-      msg = message.text.split()
-      modname = msg[1].upper()
+    # checks the format of the input (i.e. got commas etc)
+    pattern = re.compile(r"(\w+)(,\s*\w+)*$")
+    
+    # remove /addmodules part and convert all to upper
+    msg = message.text.replace("/addmodule ", "").upper()
+    print(msg)
+
+    # error message if not separated by comma
+    if pattern.match(msg) == None:
+      print("Please key in the modules in the right format")
+    
+    # split by ',' and remove whitespace, modules will be in a list (if have >1 modules)
+    elif ',' in msg:
+      lstmods = msg.split(", ")
+      # lstmods = [x.strip(' ') for x in lstmods]
+    
+    # if only one module in added, add to lstmods (to check if it is in NUSmods later)
+    else:
+      lstmods = []
+      lstmods.append(msg)
+
+    # loop through each mod in the list and error check
+    for modname in lstmods:
       mymods = cart[chat_id]["mymods"]
+      tmp_db = GetModuleInfo(modname)["semesterData"]
+      semesters_offered = []
+
+      # append module's offered semesters into a list
+      for i in tmp_db:
+        semesters_offered.append(str(i["semester"]))
+
+      # error if module not offered in current semester
+      if CURRENT_SEMESTER not in semesters_offered:
+        bot.send_message(chat_id, text=f'{modname} could not be added because it is not offered in the current semester.')
+        continue
 
       # error if module alr in the list
       if modname in mymods:
-        bot.send_message(chat_id, text='Module already added!') 
+        bot.send_message(chat_id, text='Module already added!')
+        continue
       
       # check if no of modules in the list is > 10 (have a cap)
       if len(mymods) >= 10:
@@ -86,22 +120,27 @@ def modadd(message):
         chat_id,
         text=
         'Maximum number of modules (10) added!'
-        )       
+        )
+        continue
 
       # check if module is in the NUSmods list
       elif modname in lst:
-          mymods.append(modname)
-          print(modname)  # error checking purposes, to delete
-          bot.reply_to(message, modname)
-          bot.send_message(
-              chat_id,
-              text=
-              'Module successfully added! Continue to add modules using the format /addmodule <module code>. e.g. /addmodule LSM2191. To check the list of modules added, use the command /mymodules'
-          )
-      
-  # returns error if not in list
+        mymods.append(modname)
+        print(modname)  # error checking purposes, to delete
+        bot.send_message(
+            chat_id,
+            text=
+            f'**{modname}** successfully added!'
+        )
+        continue
+        
+      # returns error if not in list
       else:
-          bot.send_message(chat_id, text='Please enter a valid module code!')
+        bot.send_message(chat_id, text=f'{modname} is not a valid module code!')
+
+    bot.send_message(chat_id, text=f'Continue to add modules using the format /addmodule <module code>. e.g. /addmodule LSM2191 OR multiple modules using /addmodule LSM2191, LSM2232. To check the list of modules added, use the command /mymodules')
+    
+    print(f"This is for lstmods {lstmods}")
 
   # error message if they do not give a module code after the command
   except:
@@ -289,10 +328,10 @@ def checkslots(chat_id):
   # Get total possible slots for modules in the cart
   for mod in mymods:
     total_size = 0
-    tmp_db = requests.get(f"https://api.nusmods.com/v2/2021-2022/modules/{mod}.json")
+    tmp_db = GetModuleInfo(f'{mod}')
 
     # Narrow down data with class sizes
-    timetable = tmp_db.json()["semesterData"][0]["timetable"]
+    timetable = tmp_db["semesterData"][0]["timetable"]
     
     # Add student count for all classNo
     for i in range (1, 7):
