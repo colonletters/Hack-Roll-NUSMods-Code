@@ -17,7 +17,7 @@ bot.set_my_commands([
     BotCommand('deletemodule', 'Deletes a module from the timetable plan'),
     BotCommand('clearmodules', 'Clears all module from module cart'),
     BotCommand('mymodules', 'Lists all modules added to the timetable plan'),
-    BotCommand('checkvacancy', 'Checks the vacancy of the mods in the cart')
+    BotCommand('checkslots', 'Checks the vacancy of the mods in the cart')
 ])
 
 # NUS mods database
