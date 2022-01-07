@@ -15,6 +15,7 @@ bot.set_my_commands([
     BotCommand('start', 'Starts the bot'),
     BotCommand('addmodule', 'Adds a module to the timetable plan'),
     BotCommand('deletemodule', 'Deletes a module from the timetable plan'),
+    BotCommand('clearmodules', 'Clears all module from module cart'),
     BotCommand('mymodules', 'Lists all modules added to the timetable plan'),
     BotCommand('checkvacancy', 'Checks the vacancy of the mods in the cart')
 ])
@@ -154,6 +155,26 @@ def moddel(message):
       )
 
 
+# clear modules from module list
+@bot.message_handler(commands=['clearmodules'])
+def modclear(message):
+  """
+  Command that clear all modules from module list
+  """
+
+  chat_id = message.chat.id
+  if chat_id not in cart:
+      request_start(chat_id)
+      return
+
+  cart[chat_id]["mymods"] = []
+  bot.send_message(
+          chat_id,
+          text=
+          'Module cart has been cleared!'
+      )
+
+
 # displays list of modules that was added by user
 @bot.message_handler(commands=['mymodules'])
 def mymodules(message):
@@ -199,15 +220,32 @@ def checkvacancy (message):
   """
 
   chat_id = message.chat.id
-    if chat_id not in cart:
-        request_start(chat_id)
-        return
+  if chat_id not in cart:
+      request_start(chat_id)
+      return
   
   mymods = cart[chat_id]["mymods"]
 
   # Get total possible slots for modules in the cart
-  
+  for mod in mymods:
+    total_size = 0
+    tmp_db = requests.get(f"https://api.nusmods.com/v2/2021-2022/modules/{mod}.json")
+
+    # Narrow down data with class sizes
+    timetable = tmp_db.json()["semesterData"][0]["timetable"]
     
+    # Add student count for all classNo
+    for i in range (1, 7):
+      for j in timetable:
+        if j["classNo"] == f"{i}" and j["lessonType"] == "Lecture":
+          total_size += j["size"]
+          break
+          
+    bot.send_message(
+    chat_id,
+    text=
+    f'The total slot for {mod} is {total_size}.'
+    )
 
 
 bot.infinity_polling()
