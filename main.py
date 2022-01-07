@@ -17,7 +17,8 @@ bot.set_my_commands([
     BotCommand('deletemodule', 'Deletes a module from the timetable plan'),
     BotCommand('clearmodules', 'Clears all module from module cart'),
     BotCommand('mymodules', 'Lists all modules added to the timetable plan'),
-    BotCommand('checkslots', 'Checks the vacancy of the mods in the cart')
+    BotCommand('checkslots', 'Checks the vacancy of the mods in the cart'),
+    BotCommand('surpriseme', 'Surprises!')
 ])
 
 # NUS mods database
@@ -252,8 +253,27 @@ def checkslots (message):
     bot.send_message(
     chat_id,
     text=
-    f'The total slot for {mod} is {total_size}.'
+    f'The total slots for {mod} is {total_size}.'
     )
+
+
+# checks the total slots of the mods in the cart
+@bot.message_handler(commands=['surpriseme'])
+def surpriseme (message):
+  """
+  Surprise surprise
+  """
+
+  chat_id = message.chat.id
+  if chat_id not in cart:
+      request_start(chat_id)
+      return
+  
+  bot.send_message(
+      chat_id,
+      text=
+      'https://www.youtube.com/watch?v=oPRv6WrPThI'
+      )
 
 
 bot.infinity_polling()
