@@ -89,7 +89,15 @@ def modadd(message):
 
       # error if module alr in the list
       if modname in mymods:
-        bot.send_message(chat_id, text='Module already added!')        
+        bot.send_message(chat_id, text='Module already added!') 
+      
+      # check if no of modules in the list is > 10 (have a cap)
+        if len(mymods) >= 10:
+        bot.send_message(
+        chat_id,
+        text=
+        'Maximum number of modules (10) added!'
+        )       
 
       # check if module is in the NUSmods list
       elif modname in lst:
@@ -201,10 +209,8 @@ def mymodules(message):
     return
     
   else:
-    bot.send_message(chat_id, text='Here are the modules in the list now:')
-  
     for i in range(len(mymods)):
-      modtext = mymods[i]
+      
       bot.send_message(chat_id, text=modtext)
     bot.send_message(
       chat_id,
