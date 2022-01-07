@@ -231,7 +231,7 @@ def checkslots (message):
     bot.send_message(
       chat_id,
       text=
-      'No modules in the list!'
+      'No modules in the list! Please add modules using the command /addmodule to view the vacancies'
     )
 
   # Get total possible slots for modules in the cart
