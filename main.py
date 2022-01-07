@@ -57,8 +57,7 @@ def start(message):
 
   # send message to the user
   bot.send_message(chat_id=chat_id, text=f'Hello {chat_user}, welcome to NUS Mods Planner. This bot aims to help you to make your timetable in NUS as painful OR painless as possible 😄')
-  bot.send_message(chat_id=chat_id, text=f'To view the functions in this bot, type / and select the command of interest, e.g. /addmodules')
-
+  bot.send_message(chat_id=chat_id, text=f'To view the functions in this bot, type / and select the command of interest, e.g. /addmodule')
 
 # add module to a list
 @bot.message_handler(commands=['addmodule'])
@@ -335,7 +334,7 @@ def checkslots(chat_id):
     timetable = tmp_db["semesterData"][0]["timetable"]
     
     # Add student count for all classNo
-    for i in range (1, 7):
+    for i in range (1, 30):
       for j in timetable:
         if j["classNo"] == f"{i}" and j["lessonType"] == "Lecture":
           total_size += j["size"]
@@ -343,11 +342,19 @@ def checkslots(chat_id):
  
     
     if total_size == 0:
-      for i in range (1, 7):
+      for i in range (1, 30):
         for j in timetable:
           if j["classNo"] == f"{i}" and j["lessonType"] == "Tutorial":
             total_size += j["size"]
-            break         
+            break
+
+    if total_size == 0:
+      for i in range (1, 30):
+        for j in timetable:
+          if j["classNo"] == f"0{i}" and j["lessonType"] == "Sectional Teaching":
+            total_size += j["size"]
+            break
+             
     bot.send_message(
     chat_id,
     text=
