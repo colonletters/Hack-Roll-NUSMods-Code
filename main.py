@@ -28,7 +28,7 @@ for i in db.json():
     lst.append(x)
 
 # list for adding mods of interest
-mymods = []
+# mymods = []
 
 
 def request_start(chat_id):
@@ -60,6 +60,9 @@ def start(message):
     # Initialise session
     cart[chat_id] = {}
 
+    # Initialise mymods list specific to the user
+    cart[chat_id]["mymods"] = []
+
     # send message to the user
     bot.send_message(chat_id=chat_id, text=message_text)
 
@@ -78,6 +81,7 @@ def modadd(message):
     try:
         msg = message.text.split()
         modname = msg[1].upper()
+        mymods = cart[chat_id]["mymods"]
 
         # error if module alr in the list
         if modname in mymods:
@@ -110,7 +114,7 @@ def modadd(message):
 # displays list of modules that was added by user
 @bot.message_handler(commands=['mymodules'])
 def mymodules(message):
-    """
+  """
   Command that shows modules in the list
   """
     chat_id = message.chat.id
@@ -119,6 +123,7 @@ def mymodules(message):
         return
 
     # prints out the list of modules added
+    mymods = cart[chat_id]["mymods"]
     print(mymods)
 
     # check if list of mods added is empty
