@@ -16,8 +16,6 @@ bot.set_my_commands([
     BotCommand('addmodule', 'Adds a module to the timetable plan'),
     BotCommand('deletemodule', 'Deletes a module from the timetable plan'),
     BotCommand('mymodules', 'Lists all modules added to the timetable plan'),
-    # BotCommand('cart', 'Lists all items added in cart'),
-    # BotCommand('clearallmodules', 'Clears all items in the cart'),
 ])
 
 # NUS mods database
@@ -65,5 +63,47 @@ def start(message):
     # send message to the user
     bot.send_message(chat_id=chat_id, text=message_text)
 
+
+# add module to a list
+@bot.message_handler(commands=['addmodule'])
+def modadd(message):
+    """
+  Command that adds modules to the list
+  """
+    chat_id = message.chat.id
+    if chat_id not in cart:
+        request_start(chat_id)
+        return
+
+    try:
+        msg = message.text.split()
+        modname = msg[1].upper()
+
+        # error if module alr in the list
+        if modname in mymods:
+          bot.send_message(chat_id, text='Module already added!')        
+
+        # check if module is in the NUSmods list
+        elif modname in lst:
+            mymods.append(modname)
+            print(modname)  # error checking purposes, to delete
+            bot.reply_to(message, modname)
+            bot.send_message(
+                chat_id,
+                text=
+                'Module successfully added! Continue to add modules using the format /addmodule <module code>. e.g. /addmodule LSM2191. To check the list of modules added, use the command /mymodules'
+            )
+        
+    # returns error if not in list
+        else:
+            bot.send_message(chat_id, text='Please enter a valid module code!')
+
+    # error message if they do not give a module code after the command
+    except:
+        bot.send_message(
+            chat_id,
+            text=
+            'Please enter a module code in this format: /addmodule <module code>. e.g. /addmodule LSM2191'
+        )
 
 bot.infinity_polling()
