@@ -4,8 +4,9 @@ import telebot, requests, json, random
 from telebot.types import (BotCommand, InlineKeyboardButton,
                            InlineKeyboardMarkup, LabeledPrice)
 
-# import cart from the database file
+# import cart, NUSMods
 from database import cart
+from APICall import db, lst
 
 # HackNRoll NUS Mods bot
 API_KEY = os.getenv('API_KEY')
@@ -19,18 +20,6 @@ bot.set_my_commands([
     BotCommand('mymodules', 'Lists all modules added to the timetable plan'),
     BotCommand('functions', 'View all executable functions for modules in cart')
 ])
-
-# NUS mods database
-db = requests.get("https://api.nusmods.com/v2/2021-2022/moduleList.json")
-
-# gets all module codes to a list
-lst = []
-for i in db.json():
-    x = i.get('moduleCode')
-    lst.append(x)
-
-# list for adding mods of interest
-# mymods = []
 
 
 def request_start(chat_id):
@@ -92,7 +81,7 @@ def modadd(message):
         bot.send_message(chat_id, text='Module already added!') 
       
       # check if no of modules in the list is > 10 (have a cap)
-        if len(mymods) >= 10:
+      if len(mymods) >= 10:
         bot.send_message(
         chat_id,
         text=
@@ -209,9 +198,16 @@ def mymodules(message):
     return
     
   else:
+    modtext = 'Here are the list added mods:\n'
     for i in range(len(mymods)):
-      
-      bot.send_message(chat_id, text=modtext)
+      mod = mymods[i]
+      modtext += f'{mod}\n'
+    
+    bot.send_message(
+      chat_id,
+      text=modtext
+      )
+
     bot.send_message(
       chat_id,
       text=
