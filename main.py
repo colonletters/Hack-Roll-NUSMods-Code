@@ -280,7 +280,7 @@ def checkslots(chat_id):
     bot.send_message(
       chat_id,
       text=
-      'No modules in the list! Please add modules using the command /addmodule to view the vacancies'
+      'No modules in the list! Please add modules using the command /addmodule to view the slots!'
     )
     return
 
@@ -326,6 +326,7 @@ def surpriseme(chat_id):
       chat_id,
       text=f'{random_url}'
       )
+  return
 
 
 bot.infinity_polling()
