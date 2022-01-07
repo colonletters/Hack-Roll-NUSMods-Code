@@ -1,6 +1,6 @@
 import os
 
-import telebot, requests, json
+import telebot, requests, json, random
 from telebot.types import (BotCommand, InlineKeyboardButton,
                            InlineKeyboardMarkup, LabeledPrice)
 
@@ -257,22 +257,29 @@ def checkslots (message):
     )
 
 
-# checks the total slots of the mods in the cart
+# Surprises the user
 @bot.message_handler(commands=['surpriseme'])
 def surpriseme (message):
   """
   Surprise surprise
   """
 
+  # Rick roll, vaccination
+  surprises = [
+    "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "https://www.youtube.com/watch?v=oPRv6WrPThI"
+  ]
   chat_id = message.chat.id
   if chat_id not in cart:
       request_start(chat_id)
       return
   
+  # Generate random URL
+  random_url = surprises[random.randrange(len(surprises))]
+
   bot.send_message(
       chat_id,
-      text=
-      'https://www.youtube.com/watch?v=oPRv6WrPThI'
+      text=f'{random_url}'
       )
 
 
