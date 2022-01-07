@@ -212,11 +212,11 @@ def mymodules(message):
       )
 
 
-# checks the current vacancy of the mods in the cart
-@bot.message_handler(commands=['checkvacancy'])
-def checkvacancy (message):
+# checks the total slots of the mods in the cart
+@bot.message_handler(commands=['checkslots'])
+def checkslots (message):
   """
-  Checks the vacancy of the mods in the cart
+  Checks total slots of the mods in the cart
   """
 
   chat_id = message.chat.id
@@ -225,6 +225,14 @@ def checkvacancy (message):
       return
   
   mymods = cart[chat_id]["mymods"]
+  
+  # check if list of mods added is empty
+  if len(mymods) == 0:
+    bot.send_message(
+      chat_id,
+      text=
+      'No modules in the list!'
+    )
 
   # Get total possible slots for modules in the cart
   for mod in mymods:
