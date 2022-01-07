@@ -106,4 +106,39 @@ def modadd(message):
             'Please enter a module code in this format: /addmodule <module code>. e.g. /addmodule LSM2191'
         )
 
+
+# displays list of modules that was added by user
+@bot.message_handler(commands=['mymodules'])
+def mymodules(message):
+    """
+  Command that shows modules in the list
+  """
+    chat_id = message.chat.id
+    if chat_id not in cart:
+        request_start(chat_id)
+        return
+
+    # prints out the list of modules added
+    print(mymods)
+
+    # check if list of mods added is empty
+    if len(mymods) == 0:
+      bot.send_message(
+        chat_id,
+        text=
+        'No modules in the list!'
+      )
+      
+    else:
+      bot.send_message(chat_id, text='Here are the modules in the list now:')
+    
+      for i in range(len(mymods)):
+        modtext = mymods[i]
+        bot.send_message(chat_id, text=modtext)
+      bot.send_message(
+        chat_id,
+        text=
+        'To delete a module, use the command /deletemodule <module code>. e.g. /deletemodule LSM2191'
+        )
+
 bot.infinity_polling()
