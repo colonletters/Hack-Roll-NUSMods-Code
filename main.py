@@ -1,6 +1,6 @@
 import os
 
-import telebot, requests, json, random, re
+import telebot, requests, json, random, re, classes
 from telebot.types import (BotCommand, InlineKeyboardButton,
                            InlineKeyboardMarkup, LabeledPrice)
 
@@ -18,7 +18,7 @@ bot.set_my_commands([
     BotCommand('deletemodule', 'Deletes a module from the timetable plan'),
     BotCommand('clearmodules', 'Clears all module from module cart'),
     BotCommand('mymodules', 'Lists all modules added to the timetable plan'),
-    BotCommand('functions', 'View all executable functions for modules in cart')
+    BotCommand('mymoddetails', 'View more details of modules in cart')
 ])
 
 CURRENT_SEMESTER = "2"
@@ -56,7 +56,7 @@ def start(message):
   cart[chat_id]["mymods"] = []
 
   # send message to the user
-  bot.send_message(chat_id=chat_id, text=f'Hello {chat_user}, welcome to NUS Mods Planner. This bot aims to help you to make your timetable in NUS as painful OR painless as possible 😄')
+  bot.send_message(chat_id=chat_id, text=f'Hello {chat_user}, welcome to NUS Mods Planner. This bot aims to help you to check and plan your timetable in NUS 😄')
   bot.send_message(chat_id=chat_id, text=f'To view the functions in this bot, type / and select the command of interest, e.g. /addmodule')
 
 # add module to a list
@@ -255,8 +255,8 @@ def mymodules(message):
 
 
 # Provide buttons for functions available
-@bot.message_handler(commands=['functions'])
-def functions(message):
+@bot.message_handler(commandsmymoddetailsons'])
+dmymoddetailsons(message):
   """
   Display available functions in buttons
   """
@@ -271,7 +271,9 @@ def functions(message):
   buttons = []
   all_functions = [
     'Check slots',
-    'Surprise me'
+    'Check total modular credits',
+    'Can my modules be S/U-ed?',
+    'Surprise me',
   ]
 
   for function_name in all_functions:
@@ -306,6 +308,12 @@ def handle_callback(call):
   if data == 'Surprise me':
     surpriseme(chat_id)
     return
+  if data == 'Check total modular credits':
+    checkcredits(chat_id)
+    return
+  if data == 'Can my modules be S/U-ed?':
+    checkSU(chat_id)
+    return
 
 
 # Helper function that checks the total slots of the mods in the cart
@@ -331,35 +339,129 @@ def checkslots(chat_id):
     tmp_db = GetModuleInfo(f'{mod}')
 
     # Narrow down data with class sizes
-    timetable = tmp_db["semesterData"][0]["timetable"]
-    
-    # Add student count for all classNo
-    for i in range (1, 30):
-      for j in timetable:
-        if j["classNo"] == f"{i}" and j["lessonType"] == "Lecture":
-          total_size += j["size"]
-          break
- 
-    
-    if total_size == 0:
-      for i in range (1, 30):
-        for j in timetable:
-          if j["classNo"] == f"{i}" and j["lessonType"] == "Tutorial":
-            total_size += j["size"]
-            break
+    semesterData = tmp_db["semesterData"]
 
-    if total_size == 0:
-      for i in range (1, 30):
-        for j in timetable:
-          if j["classNo"] == f"0{i}" and j["lessonType"] == "Sectional Teaching":
-            total_size += j["size"]
-            break
-             
+    # Check if semester 1 or semester 2
+    for semester in semesterData:
+      if semester["semester"] == 1:
+        continue
+      elif semester["semester"] == 2:
+        timetable = semester["timetable"]
+        
+        # Add student count for all classNo
+        for i in range (1, 30):
+          for j in timetable:
+            if j["classNo"] == f"{i}" and j["lessonType"] == "Lecture":
+              total_size += j["size"]
+              break
+        
+        if total_size == 0:
+          for i in range (1, 30):
+            for j in timetable:
+              if j["classNo"] == f"{i}" and j["lessonType"] == "Tutorial":
+                total_size += j["size"]
+                break
+
+        if total_size == 0:
+          for i in range (1, 30):
+            for j in timetable:
+              if j["classNo"] == f"0{i}" and j["lessonType"] == "Sectional Teaching":
+                total_size += j["size"]
+                print(j["size"])
+                break
+              
+              elif j["classNo"] == f"{i}" and j["lessonType"] == "Sectional Teaching":
+                total_size += j["size"]
+                print(j["size"])
+                break
+                
+        bot.send_message(
+        chat_id,
+        text=
+        f'The total slots for {mod} is {total_size}.'
+        )
+  return
+
+
+# Helper function to check total credits in the cart
+def checkcredits(chat_id):
+  """
+  Checks total credits of the mods in the cart
+  """
+  mymods = cart[chat_id]["mymods"]
+  
+  # check if list of mods added is empty
+  if len(mymods) == 0:
     bot.send_message(
-    chat_id,
-    text=
-    f'The total slots for {mod} is {total_size}.'
+      chat_id,
+      text=
+      'No modules in the list! Please add modules using the command /addmodule to view the slots!'
     )
+    return
+
+  total_credits = 0
+  
+  # Calculate total credits
+  for mod in mymods:
+    tmp_db = GetModuleInfo(f'{mod}')
+    total_credits += int(tmp_db["moduleCredit"])
+  
+  bot.send_message(
+        chat_id,
+        text=
+        f'The total module credits in your cart is {total_credits}.'
+        )
+  return
+
+
+# Helper function to check if mods are S/U-able in the cart
+def checkSU(chat_id):
+  """
+  Checks if mods in the cart can be s/u-ed
+  """
+  mymods = cart[chat_id]["mymods"]
+  
+  # check if list of mods added is empty
+  if len(mymods) == 0:
+    bot.send_message(
+      chat_id,
+      text=
+      'No modules in the list! Please add modules using the command /addmodule to view the slots!'
+    )
+    return
+
+  # check mods that are s/u-able
+  for mod in mymods:
+    tmp_db = GetModuleInfo(f'{mod}')
+
+    try:
+      print(mod)
+      attributes = tmp_db["attributes"]
+
+      if attributes["su"] == True:
+        bot.send_message(
+            chat_id,
+            text=
+            f'You __*CAN*__ S/U {mod}',
+            parse_mode='MarkdownV2'
+            )
+      else:
+        bot.send_message(
+            chat_id,
+            text=
+            f'You __*CANNOT*__ S/U {mod}',
+            parse_mode='MarkdownV2'
+            )
+    
+    except:
+      print(mod)
+      bot.send_message(
+          chat_id,
+          text=
+          f'You __*CANNOT*__ S/U {mod}',
+          parse_mode='MarkdownV2'
+          )
+  return
 
 
 # Helper function that surprises the user
