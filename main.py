@@ -495,7 +495,11 @@ def surpriseme(chat_id):
   # Rick roll, vaccination
   surprises = [
     "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    "https://www.youtube.com/watch?v=oPRv6WrPThI"
+    "https://www.youtube.com/watch?v=oPRv6WrPThI",
+    "https://www.youtube.com/watch?v=w0AOGeqOnFY",
+    "Hack&Roll is the best hackathon ever (no cap) 🧢",
+    "https://www.youtube.com/watch?v=ZZ5LpwO-An4&list=PLV2ewAgCPCq0DVamOw2sQSAVdFVjA6x78",
+    "https://www.youtube.com/watch?v=feA64wXhbjo&list=PLV2ewAgCPCq0DVamOw2sQSAVdFVjA6x78&index=2"
   ]
 
   
