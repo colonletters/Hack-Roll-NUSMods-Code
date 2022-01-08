@@ -18,7 +18,8 @@ bot.set_my_commands([
     BotCommand('deletemodule', 'Deletes a module from the timetable plan'),
     BotCommand('clearmodules', 'Clears all module from module cart'),
     BotCommand('mymodules', 'Lists all modules added to the timetable plan'),
-    BotCommand('mymoddetails', 'View more details of modules in cart')
+    BotCommand('mymoddetails', 'View more details of modules in cart'),
+    BotCommand('help', 'Get help and view available commands in the bot')
 ])
 
 CURRENT_SEMESTER = "2"
@@ -57,7 +58,31 @@ def start(message):
 
   # send message to the user
   bot.send_message(chat_id=chat_id, text=f'Hello {chat_user}, welcome to NUS Mods Planner. This bot aims to help you to check and plan your timetable in NUS 😄')
-  bot.send_message(chat_id=chat_id, text=f'To view the functions in this bot, type / and select the command of interest, e.g. /addmodule')
+  bot.send_message(chat_id=chat_id, text=f'To view the functions in this bot, use /help command')
+
+# help
+@bot.message_handler(commands=['help'])
+def help(message):
+  """
+  Command that displays help message
+  """
+
+  chat_id = message.chat.id
+  if chat_id not in cart:
+      request_start(chat_id)
+      return
+
+  bot.send_message(
+          chat_id,
+          text=
+          'Here is how the bot works: \n\n1. Use /addmodules to add modules that you are interested in (modules that are not available will not be added)\n2. When you are done adding, check the modules you have added using the command /mymodules \n3. Use /mymoddetails to view more details about the modules you have added (i.e. check slots, total MCs, S/U availability)'
+      )
+
+  bot.send_message(
+          chat_id,
+          text=
+          'Commands available:\n\n/start: Starts the bot \n\n/addmodule: Adds a module to the timetable plan \n\n/deletemodule: Deletes a module from the timetable plan \n\n/clearmodules: Clears all module from module cart \n\n/mymodules: Lists all modules added to the timetable plan \n\n/mymoddetails: View more details of modules in cart \n\n/help: Get help and view available commands in the bot'
+      )
 
 # add module to a list
 @bot.message_handler(commands=['addmodule'])
@@ -77,7 +102,6 @@ def modadd(message):
     
     # remove /addmodules part and convert all to upper
     msg = message.text.replace("/addmodule ", "").upper()
-    print(msg)
 
     # error message if not separated by comma
     if pattern.match(msg) == None:
@@ -87,7 +111,6 @@ def modadd(message):
     # split by ',' and remove whitespace, modules will be in a list (if have >1 modules)
     elif ',' in msg:
       lstmods = msg.split(", ")
-      # lstmods = [x.strip(' ') for x in lstmods]
     
     # if only one module in added, add to lstmods (to check if it is in NUSmods later)
     else:
@@ -139,8 +162,6 @@ def modadd(message):
         bot.send_message(chat_id, text=f'{modname} is not a valid module code!')
 
     bot.send_message(chat_id, text=f'Continue to add modules using the format /addmodule <module code>. e.g. /addmodule LSM2191 OR multiple modules using e.g. /addmodule LSM2191, LSM2232. To check the list of modules added, use the command /mymodules')
-    
-    print(f"This is for lstmods {lstmods}")
 
   # error message if they do not give a module code after the command
   except:
@@ -265,6 +286,16 @@ def mymoddetails(message):
   if chat_id not in cart:
     request_start(chat_id)
     return
+  
+  # error check if modules in cart
+  mymods = cart[chat_id]["mymods"]
+  if len(mymods) == 0:
+    bot.send_message(
+      chat_id,
+      text=
+      'No modules in the list!'
+    )
+    return
 
   chat_text = 'Select the function you would like to execute for modules in the cart'
 
@@ -334,6 +365,7 @@ def checkslots(chat_id):
     return
 
   # Get total possible slots for modules in the cart
+  modtext = '__List of mods__\n'
   for mod in mymods:
     total_size = 0
     tmp_db = GetModuleInfo(f'{mod}')
@@ -367,19 +399,19 @@ def checkslots(chat_id):
             for j in timetable:
               if j["classNo"] == f"0{i}" and j["lessonType"] == "Sectional Teaching":
                 total_size += j["size"]
-                print(j["size"])
                 break
               
               elif j["classNo"] == f"{i}" and j["lessonType"] == "Sectional Teaching":
                 total_size += j["size"]
-                print(j["size"])
                 break
                 
-        bot.send_message(
-        chat_id,
-        text=
-        f'The total slots for {mod} is {total_size}.'
-        )
+        modtext += f'The total slots for *{mod}* is {total_size}\n'
+
+  bot.send_message(
+  chat_id,
+  text=modtext,
+  parse_mode='MarkdownV2'
+  )
   return
 
 
@@ -431,6 +463,7 @@ def checkSU(chat_id):
     return
 
   # check mods that are s/u-able
+  modtext = '__List of mods__\n'
   for mod in mymods:
     tmp_db = GetModuleInfo(f'{mod}')
 
@@ -439,28 +472,18 @@ def checkSU(chat_id):
       attributes = tmp_db["attributes"]
 
       if attributes["su"] == True:
-        bot.send_message(
-            chat_id,
-            text=
-            f'You __*CAN*__ S/U {mod}',
-            parse_mode='MarkdownV2'
-            )
+        modtext += f'You *CAN* S/U {mod}\n'
       else:
-        bot.send_message(
-            chat_id,
-            text=
-            f'You __*CANNOT*__ S/U {mod}',
-            parse_mode='MarkdownV2'
-            )
+        modtext += f'You *CANNOT* S/U {mod}\n'
     
     except:
-      print(mod)
-      bot.send_message(
-          chat_id,
-          text=
-          f'You __*CANNOT*__ S/U {mod}',
-          parse_mode='MarkdownV2'
-          )
+      modtext += f'You *CANNOT* S/U {mod}\n'
+  
+  bot.send_message(
+    chat_id,
+    text=modtext,
+    parse_mode='MarkdownV2'
+  )
   return
 
 
