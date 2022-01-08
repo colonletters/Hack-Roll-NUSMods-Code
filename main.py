@@ -149,7 +149,6 @@ def modadd(message):
       # check if module is in the NUSmods list
       elif modname in lst:
         mymods.append(modname)
-        print(modname)  # error checking purposes, to delete
         bot.send_message(
             chat_id,
             text=
