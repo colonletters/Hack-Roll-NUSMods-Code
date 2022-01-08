@@ -255,8 +255,8 @@ def mymodules(message):
 
 
 # Provide buttons for functions available
-@bot.message_handler(commandsmymoddetailsons'])
-dmymoddetailsons(message):
+@bot.message_handler(commands=['mymoddetails'])
+def mymoddetails(message):
   """
   Display available functions in buttons
   """
