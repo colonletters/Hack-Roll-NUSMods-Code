@@ -4,8 +4,10 @@ from datetime import timedelta
 from itertools import product, groupby, combinations
 
 class Timeslot():
-    def __init__(self, data, type):
-        self.Type = type
+  #holds info for any particular block of time
+  
+    def __init__(self, data, typeOf):
+        self.Type = typeOf
         self.Number = data['classNo']
         self.Start = timedelta(hours = int(data['startTime'][:2]), minutes = int(data['startTime'][2:]))
         self.End = timedelta(hours=int(data['endTime'][:2]), minutes=int(data['endTime'][2:]))
@@ -24,6 +26,7 @@ class Timeslot():
         return self.__str__()
 
 class Module():
+  #holds multiply timeslots together and generates 'choices'
     def __init__(self, ModString):
         #API CALL#
         ParseBuffer = GetModuleInfo(ModString)
@@ -126,7 +129,7 @@ class Module():
                 self.Domain.remove(a)
                 #(len(self.Domain))
             except:
-                print('uh oh')
+                #print('uh oh')
                 pass
 
 
@@ -149,6 +152,10 @@ class TimeTable():
         return self.backtrack(dict())
 
     def enforce_node_consistency(self):
+        """
+        Some code below cannibalized/repurposed from a personal CS50 AI project
+        """
+
         removelist = []
         for module in self.Modlist:
             for node in module.Domain:
